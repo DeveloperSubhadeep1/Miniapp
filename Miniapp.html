@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minato V5.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 480px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .header {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            color: #c9d1d9;
+        }
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .main-content {
+            width: 100%;
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .content-image {
+            width: 100%;
+            height: auto;
+            max-width: 300px;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .content-details {
+            width: 100%;
+            text-align: left;
+            margin-top: 1rem;
+        }
+        .content-details p {
+            margin-bottom: 0.5rem;
+        }
+        .content-details .label {
+            color: #58a6ff;
+            font-weight: 500;
+        }
+        .genres-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .genre-tag {
+            background-color: #21262d;
+            border: 1px solid #30363d;
+            color: #c9d1d9;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: 2rem;
+        }
+        .nav-button {
+            flex-grow: 1;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .nav-button:disabled {
+            background-color: #30363d;
+            color: #768390;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .nav-button.back {
+            background: linear-gradient(to right, #00d2ff, #3a7bd5);
+            color: white;
+            margin-right: 0.5rem;
+        }
+        .nav-button.next {
+            background: linear-gradient(to right, #3a7bd5, #00d2ff);
+            color: white;
+            margin-left: 0.5rem;
+        }
+        .footer {
+            margin-top: 2rem;
+            width: 100%;
+            text-align: center;
+        }
+        .search-container {
+            display: flex;
+            width: 100%;
+            padding: 0 1rem;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+        .search-input {
+            flex-grow: 1;
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            color: #c9d1d9;
+            outline: none;
+        }
+        .search-input::placeholder {
+            color: #768390;
+        }
+        .search-button {
+            background-color: #00d2ff;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .powered-by {
+            font-size: 0.8rem;
+            color: #768390;
+        }
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            z-index: 1000;
+            text-align: center;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+        }
+        .language-selector {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            color: #c9d1d9;
+            outline: none;
+            margin-left: 1rem;
+        }
+        .llm-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-direction: column;
+            width: 100%;
+        }
+        .llm-button {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #58a6ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+        <span class="header-title" id="header-title"></span>
+        <select id="language-selector" class="language-selector">
+            <option value="en">English</option>
+            <option value="bn"></option>
+            <option value="hi"></option>
+            <option value="ta"></option>
+            <option value="te"></option>
+        </select>
+    </div>
+
+    <div id="main-card" class="main-content hidden">
+        <img id="poster" class="content-image" src="" alt="Poster">
+        <div class="content-details">
+            <p><span class="label" id="title-label"></span> <span id="title"></span></p>
+            <p><span class="label" id="type-label"></span> <span id="type"></span></p>
+            <p><span class="label" id="rating-label"></span> <span id="rating"></span></p>
+            <p><span class="label" id="release-date-label"></span> <span id="release-date"></span></p>
+            <p><span class="label" id="runtime-label"></span> <span id="runtime"></span></p>
+            <p><span class="label" id="genres-label"></span> <span id="genres-container" class="genres-container"></span></p>
+            <p class="mt-2"><span class="label" id="storyline-label"></span> <span id="storyline"></span></p>
+        </div>
+    </div>
+
+    <div class="nav-buttons">
+        <button id="back-button" class="nav-button back" disabled></button>
+        <button id="next-button" class="nav-button next" disabled></button>
+    </div>
+
+    <div class="footer">
+        <p class="powered-by" id="powered-by-text"></p>
+    </div>
+
+    <div class="search-container">
+        <input type="text" id="search-input" class="search-input">
+        <button id="search-button" class="search-button"></button>
+    </div>
+</div>
+
+<script>
+    const API_KEY = '1c4187f895ad7e2b461e96e3c621c9d3';
+    const BASE_URL = 'https://api.themoviedb.org/3';
+    const TRENDING_URL = `${BASE_URL}/trending/all/week?api_key=${API_KEY}`;
+    const SEARCH_URL = `${BASE_URL}/search/multi?api_key=${API_KEY}&query=`;
+    const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+
+    let searchResults = [];
+    let currentIndex = 0;
+    let currentLanguage = 'en';
+
+    // Get all the DOM elements and assign them to variables
+    const languageSelector = document.getElementById('language-selector');
+    const searchInput = document.getElementById('search-input');
+    const searchButton = document.getElementById('search-button');
+    const backButton = document.getElementById('back-button');
+    const nextButton = document.getElementById('next-button');
+    const mainCard = document.getElementById('main-card');
+    const poster = document.getElementById('poster');
+    const titleElem = document.getElementById('title');
+    const typeElem = document.getElementById('type');
+    const ratingElem = document.getElementById('rating');
+    const releaseDateElem = document.getElementById('release-date');
+    const runtimeElem = document.getElementById('runtime');
+    const genresContainer = document.getElementById('genres-container');
+    const storylineElem = document.getElementById('storyline');
+    
+    // Map language codes to their TMDB format
+    const languageMap = {
+        'en': 'en-US',
+        'bn': 'bn-BD',
+        'hi': 'hi-IN',
+        'ta': 'ta-IN',
+        'te': 'te-IN'
+    };
+    
+    const genreMap = new Map();
+
+    const translations = {
+        en: {
+            headerTitle: 'Minato V5.1 ',
+            searchPlaceholder: 'Search movies or series...',
+            searchButton: 'Search',
+            backButton: ' Back',
+            nextButton: 'Next ',
+            titleLabel: 'Title:',
+            typeLabel: 'Type:',
+            ratingLabel: 'Rating:',
+            releaseDateLabel: 'Release Date:',
+            runtimeLabel: 'Runtime:',
+            genresLabel: 'Genres:',
+            storylineLabel: 'Storyline:',
+            movieType: 'Movie ',
+            seriesType: 'Series ',
+            unknown: 'Unknown',
+            noStoryline: 'No storyline available.',
+            posterNotFound: 'Poster Not Found',
+            searchResultsNotFound: 'No search results found.',
+            searchPrompt: 'Please enter something to search for.',
+            trendingLoadError: 'Failed to load trending content.',
+            poweredBy: 'Powered by Minato V5.1',
+            closeButton: 'Close',
+            mins: 'minutes',
+            minsPerEp: 'mins/ep',
+            noTranslatedStoryline: 'No storyline available in this language. Showing original.',
+            apiForbiddenError: 'API key error. Your environment may not have a valid API key, or it may have expired.'
+        },
+        bn: {
+            headerTitle: ' V5.1 ',
+            searchPlaceholder: '   ...',
+            searchButton: '',
+            backButton: ' ',
+            nextButton: ' ',
+            titleLabel: ':',
+            typeLabel: ':',
+            ratingLabel: ':',
+            releaseDateLabel: ' :',
+            runtimeLabel: ':',
+            genresLabel: ':',
+            storylineLabel: ' :',
+            movieType: ' ',
+            seriesType: ' ',
+            unknown: '',
+            noStoryline: '   ',
+            posterNotFound: '  ',
+            searchResultsNotFound: '    ',
+            searchPrompt: '    ',
+            trendingLoadError: '     ',
+            poweredBy: 'Powered by Minato V5.1',
+            closeButton: ' ',
+            mins: '',
+            minsPerEp: '/',
+            noTranslatedStoryline: '        ',
+            apiForbiddenError: 'API key-     API key ,     '
+        },
+        hi: {
+            headerTitle: ' V5.1 ',
+            searchPlaceholder: '   ...',
+            searchButton: '',
+            backButton: ' ',
+            nextButton: ' ',
+            titleLabel: ':',
+            typeLabel: ':',
+            ratingLabel: ':',
+            releaseDateLabel: '  :',
+            runtimeLabel: ':',
+            genresLabel: ':',
+            storylineLabel: ':',
+            movieType: ' ',
+            seriesType: ' ',
+            unknown: '',
+            noStoryline: '    ',
+            posterNotFound: '  ',
+            searchResultsNotFound: '     ',
+            searchPrompt: '  .',
+            trendingLoadError: '     ',
+            poweredBy: 'Powered by Minato V5.1',
+            closeButton: ' ',
+            mins: '',
+            minsPerEp: '/',
+            noTranslatedStoryline: '            ',
+            apiForbiddenError: 'API key       API key    ,        '
+        },
+        ta: {
+            headerTitle: ' V5.1 ',
+            searchPlaceholder: '   ...',
+            searchButton: '',
+            backButton: ' ',
+            nextButton: ' ',
+            titleLabel: ':',
+            typeLabel: ':',
+            ratingLabel: ':',
+            releaseDateLabel: ' :',
+            runtimeLabel: ':',
+            genresLabel: ':',
+            storylineLabel: ' :',
+            movieType: ' ',
+            seriesType: ' ',
+            unknown: '',
+            noStoryline: '  .',
+            posterNotFound: ' ',
+            searchResultsNotFound: '  .',
+            searchPrompt: ' .',
+            trendingLoadError: '   .',
+            poweredBy: 'Powered by Minato V5.1',
+            closeButton: '',
+            mins: '',
+            minsPerEp: '/',
+            noTranslatedStoryline: '   .  .',
+            apiForbiddenError: 'API  .    API       .'
+        },
+        te: {
+            headerTitle: ' V5.1 ',
+            searchPlaceholder: '    ...',
+            searchButton: '',
+            backButton: ' ',
+            nextButton: ' ',
+            titleLabel: ':',
+            typeLabel: ':',
+            ratingLabel: ':',
+            releaseDateLabel: ' :',
+            runtimeLabel: ' :',
+            genresLabel: ':',
+            storylineLabel: ':',
+            movieType: ' ',
+            seriesType: ' ',
+            unknown: '',
+            noStoryline: '  .',
+            posterNotFound: ' .',
+            searchResultsNotFound: '   .',
+            searchPrompt: '  .',
+            trendingLoadError: '    .',
+            poweredBy: 'Powered by Minato V5.1',
+            closeButton: '',
+            mins: '',
+            minsPerEp: '/',
+            noTranslatedStoryline: '    .  .',
+            apiForbiddenError: 'API  .     API       '
+        }
+    };
+
+    function updateUI() {
+        const lang = currentLanguage;
+        const t = translations[lang];
+        document.getElementById('header-title').textContent = t.headerTitle;
+        searchInput.placeholder = t.searchPlaceholder;
+        searchButton.textContent = t.searchButton;
+        backButton.textContent = t.backButton;
+        nextButton.textContent = t.nextButton;
+        document.getElementById('title-label').textContent = t.titleLabel;
+        document.getElementById('type-label').textContent = t.typeLabel;
+        document.getElementById('rating-label').textContent = t.ratingLabel;
+        document.getElementById('release-date-label').textContent = t.releaseDateLabel;
+        document.getElementById('runtime-label').textContent = t.runtimeLabel;
+        document.getElementById('genres-label').textContent = t.genresLabel;
+        document.getElementById('storyline-label').textContent = t.storylineLabel;
+        document.getElementById('powered-by-text').textContent = t.poweredBy;
+    }
+
+    function showMessage(messageKey, titleKey = null) {
+        const message = translations[currentLanguage][messageKey] || messageKey;
+        const title = translations[currentLanguage][titleKey] || titleKey || '';
+
+        const existingMessageBox = document.querySelector('.message-box');
+        if (existingMessageBox) existingMessageBox.remove();
+
+        const messageBox = document.createElement('div');
+        messageBox.className = 'message-box';
+        let innerHTML = '';
+        if (title) {
+             innerHTML += `<h3 class="font-bold mb-2">${title}</h3>`;
+        }
+        innerHTML += `<p>${message}</p>
+            <button class="mt-4 px-4 py-2 bg-[#00d2ff] text-white rounded-md font-semibold">${translations[currentLanguage].closeButton}</button>
+        `;
+        messageBox.innerHTML = innerHTML;
+        document.body.appendChild(messageBox);
+
+        const overlay = document.createElement('div');
+        overlay.className = 'overlay';
+        document.body.appendChild(overlay);
+
+        const closeButton = messageBox.querySelector('button');
+        closeButton.addEventListener('click', () => {
+            messageBox.remove();
+            overlay.remove();
+        });
+    }
+
+    async function fetchGenres() {
+        try {
+            const response = await fetch(`${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=${languageMap[currentLanguage]}`);
+            const data = await response.json();
+            genreMap.clear();
+            data.genres.forEach(genre => {
+                genreMap.set(genre.id, genre.name);
+            });
+        } catch (error) {
+            console.error('Error fetching genres:', error);
+        }
+    }
+
+    async function fetchTrendingContent() {
+        try {
+            const response = await fetch(`${TRENDING_URL}&language=${languageMap[currentLanguage]}`);
+            const data = await response.json();
+            searchResults = data.results.filter(item => item.poster_path);
+            if (searchResults.length === 0) {
+                showMessage('searchResultsNotFound');
+            }
+            currentIndex = 0;
+            displayContent();
+        } catch (error) {
+            console.error('Error fetching trending content:', error);
+            showMessage('trendingLoadError');
+        }
+    }
+
+    async function fetchSearch(query) {
+        try {
+            const response = await fetch(`${SEARCH_URL}${query}&language=${languageMap[currentLanguage]}`);
+            const data = await response.json();
+            searchResults = data.results.filter(item => (item.media_type === 'movie' || item.media_type === 'tv') && item.poster_path);
+            if (searchResults.length === 0) {
+                showMessage('searchResultsNotFound');
+            }
+            currentIndex = 0;
+            displayContent();
+        } catch (error) {
+            console.error('Error fetching search results:', error);
+            showMessage('searchResultsNotFound');
+        }
+    }
+
+    async function fetchDetails(id, type) {
+        try {
+            const response = await fetch(`${BASE_URL}/${type}/${id}?api_key=${API_KEY}&language=${languageMap[currentLanguage]}`);
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching details:', error);
+            return null;
+        }
+    }
+
+    function displayContent() {
+        if (searchResults.length === 0) {
+            mainCard.classList.add('hidden');
+            backButton.disabled = true;
+            nextButton.disabled = true;
+            return;
+        }
+        
+        mainCard.classList.remove('hidden');
+        const content = searchResults[currentIndex];
+        
+        // Fetch translated content details
+        fetchDetails(content.id, content.media_type).then(translatedDetails => {
+            let displayedOverview = content.overview;
+            if (translatedDetails && translatedDetails.overview) {
+                displayedOverview = translatedDetails.overview;
+            } else if (!content.overview) {
+                displayedOverview = translations[currentLanguage].noStoryline;
+            }
+            storylineElem.textContent = displayedOverview;
+
+            poster.src = content.poster_path ? `${IMAGE_BASE_URL}${content.poster_path}` : 'https://placehold.co/500x750?text=' + translations[currentLanguage].posterNotFound.replace(/ /g, '+');
+            titleElem.textContent = content.title || content.name || translations[currentLanguage].unknown;
+            typeElem.textContent = content.media_type === 'movie' ? translations[currentLanguage].movieType : translations[currentLanguage].seriesType;
+            ratingElem.textContent = content.vote_average ? `${content.vote_average.toFixed(2)} / 10` : translations[currentLanguage].unknown;
+            releaseDateElem.textContent = content.release_date || content.first_air_date || translations[currentLanguage].unknown;
+            runtimeElem.textContent = translations[currentLanguage].unknown;
+
+            if (translatedDetails) {
+                if (content.media_type === 'movie' && translatedDetails.runtime) {
+                    runtimeElem.textContent = `${translatedDetails.runtime} ${translations[currentLanguage].mins}`;
+                } else if (content.media_type === 'tv' && translatedDetails.episode_run_time && translatedDetails.episode_run_time.length > 0) {
+                    runtimeElem.textContent = `${translatedDetails.episode_run_time[0]} ${translations[currentLanguage].minsPerEp}`;
+                } else {
+                    runtimeElem.textContent = translations[currentLanguage].unknown;
+                }
+            }
+
+
+            genresContainer.innerHTML = '';
+            if (translatedDetails && translatedDetails.genres && translatedDetails.genres.length > 0) {
+                translatedDetails.genres.forEach(genre => {
+                    const span = document.createElement('span');
+                    span.className = 'genre-tag';
+                    span.textContent = genre.name;
+                    genresContainer.appendChild(span);
+                });
+            } else if (content.genre_ids && content.genre_ids.length > 0) {
+                // Fallback to English genre names if translated ones are not available
+                content.genre_ids.forEach(genreId => {
+                    const genreName = genreMap.get(genreId) || translations[currentLanguage].unknown;
+                    const span = document.createElement('span');
+                    span.className = 'genre-tag';
+                    span.textContent = genreName;
+                    genresContainer.appendChild(span);
+                });
+            } else {
+                const span = document.createElement('span');
+                span.textContent = translations[currentLanguage].unknown;
+                genresContainer.appendChild(span);
+            }
+        });
+
+        backButton.disabled = currentIndex === 0;
+        nextButton.disabled = currentIndex === searchResults.length - 1;
+    }
+
+    languageSelector.addEventListener('change', (event) => {
+        currentLanguage = event.target.value;
+        updateUI();
+        fetchGenres();
+        fetchTrendingContent();
+    });
+
+    searchButton.addEventListener('click', () => {
+        const query = searchInput.value.trim();
+        if (query) {
+            fetchSearch(query);
+        } else {
+            showMessage('searchPrompt');
+        }
+    });
+
+    backButton.addEventListener('click', () => {
+        if (currentIndex > 0) {
+            currentIndex--;
+            displayContent();
+        }
+    });
+
+    nextButton.addEventListener('click', () => {
+        if (currentIndex < searchResults.length - 1) {
+            currentIndex++;
+            displayContent();
+        }
+    });
+
+    searchInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+            searchButton.click();
+        }
+    });
+
+    window.onload = () => {
+        fetchGenres();
+        fetchTrendingContent();
+        languageSelector.value = 'en';
+        updateUI();
+    };
+
+</script>
+
+</body>
+</html>
