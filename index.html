@@ -148,6 +148,11 @@
             cursor: pointer;
             transition: background-color 0.2s;
         }
+        .search-button:disabled {
+            background-color: #30363d;
+            cursor: not-allowed;
+            color: #768390;
+        }
         .powered-by {
             font-size: 0.8rem;
             color: #768390;
@@ -194,6 +199,52 @@
             outline: none;
             margin-left: 1rem;
         }
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            user-select: none;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #30363d;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #00d2ff;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
     </style>
 </head>
 <body>
@@ -208,6 +259,14 @@
             <option value="ta">தமிழ்</option>
             <option value="te">తెలుగు</option>
         </select>
+    </div>
+
+    <div class="switch-container">
+        <label for="trending-switch" id="trending-label"></label>
+        <label class="switch">
+            <input type="checkbox" id="trending-switch">
+            <span class="slider"></span>
+        </label>
     </div>
 
     <div id="main-card" class="main-content hidden">
@@ -242,8 +301,6 @@
 <script>
     const API_KEY = '1c4187f895ad7e2b461e96e3c621c9d3';
     const BASE_URL = 'https://api.themoviedb.org/3';
-    const TRENDING_URL = `${BASE_URL}/trending/all/week?api_key=${API_KEY}`;
-    const SEARCH_URL = `${BASE_URL}/search/multi?api_key=${API_KEY}&query=`;
     const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
     const TELEGRAM_BOT_URL = 'https://telegram.me/Hell_King_69_Bot?start=getfile-';
 
@@ -252,6 +309,8 @@
     let currentLanguage = 'en';
 
     const languageSelector = document.getElementById('language-selector');
+    const trendingSwitch = document.getElementById('trending-switch');
+    const trendingLabel = document.getElementById('trending-label');
     const searchInput = document.getElementById('search-input');
     const searchButton = document.getElementById('search-button');
     const backButton = document.getElementById('back-button');
@@ -284,6 +343,7 @@
             searchButton: 'Search',
             backButton: '← Back',
             nextButton: 'Next →',
+            trendingLabel: 'Trending',
             titleLabel: 'Title:',
             typeLabel: 'Type:',
             ratingLabel: 'Rating:',
@@ -312,6 +372,7 @@
             searchButton: 'অনুসন্ধান',
             backButton: '← আগের',
             nextButton: 'পরের →',
+            trendingLabel: 'ট্রেন্ডিং',
             titleLabel: 'টাইটেল:',
             typeLabel: 'ধরন:',
             ratingLabel: 'রেটিং:',
@@ -340,6 +401,7 @@
             searchButton: 'खोजें',
             backButton: '← पिछला',
             nextButton: 'अगला →',
+            trendingLabel: 'ट्रेंडिंग',
             titleLabel: 'शीर्षक:',
             typeLabel: 'प्रकार:',
             ratingLabel: 'रेटिंग:',
@@ -368,6 +430,7 @@
             searchButton: 'தேடு',
             backButton: '← முந்தையது',
             nextButton: 'அடுத்தது →',
+            trendingLabel: 'பிரபலமானவை',
             titleLabel: 'தலைப்பு:',
             typeLabel: 'வகை:',
             ratingLabel: 'மதிப்பீடு:',
@@ -396,6 +459,7 @@
             searchButton: 'వెతకండి',
             backButton: '← వెనక్కి',
             nextButton: 'తర్వాత →',
+            trendingLabel: 'ట్రెండింగ్',
             titleLabel: 'శీర్షిక:',
             typeLabel: 'రకం:',
             ratingLabel: 'రేటింగ్:',
@@ -429,6 +493,7 @@
         backButton.textContent = t.backButton;
         nextButton.textContent = t.nextButton;
         searchTelegramButton.textContent = 'Search on Telegram';
+        trendingLabel.textContent = t.trendingLabel;
         document.getElementById('title-label').textContent = t.titleLabel;
         document.getElementById('type-label').textContent = t.typeLabel;
         document.getElementById('rating-label').textContent = t.ratingLabel;
@@ -475,10 +540,12 @@
         try {
             const response = await fetch(`${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=${languageMap[currentLanguage]}`);
             const data = await response.json();
-            genreMap.clear();
-            data.genres.forEach(genre => {
-                genreMap.set(genre.id, genre.name);
-            });
+            if (data && data.genres) {
+                genreMap.clear();
+                data.genres.forEach(genre => {
+                    genreMap.set(genre.id, genre.name);
+                });
+            }
         } catch (error) {
             console.error('Error fetching genres:', error);
         }
@@ -486,14 +553,20 @@
 
     async function fetchTrendingContent() {
         try {
+            const TRENDING_URL = `${BASE_URL}/trending/all/week?api_key=${API_KEY}`;
             const response = await fetch(`${TRENDING_URL}&language=${languageMap[currentLanguage]}`);
             const data = await response.json();
-            searchResults = data.results.filter(item => item.poster_path);
-            if (searchResults.length === 0) {
-                showMessage('searchResultsNotFound');
+            if (data && data.results) {
+                searchResults = data.results.filter(item => item.poster_path);
+                if (searchResults.length === 0) {
+                    showMessage('searchResultsNotFound');
+                }
+                currentIndex = 0;
+                displayContent(currentIndex);
+            } else {
+                showMessage('trendingLoadError');
+                searchResults = [];
             }
-            currentIndex = 0;
-            displayContent(currentIndex);
             updateNavigationButtons();
         } catch (error) {
             console.error('Error fetching trending content:', error);
@@ -501,16 +574,52 @@
         }
     }
 
+    // Function to fetch popular movies based on language
+    async function fetchNonTrendingContent() {
+        try {
+            const POPULAR_URL = `${BASE_URL}/discover/movie?api_key=${API_KEY}&language=${languageMap[currentLanguage]}&sort_by=popularity.desc`;
+            
+            const response = await fetch(POPULAR_URL);
+            const data = await response.json();
+
+            if (data && data.results) {
+                // Filter to show only movies
+                searchResults = data.results.filter(item => item.media_type === 'movie' || item.title);
+                
+                if (searchResults.length === 0) {
+                    showMessage('searchResultsNotFound');
+                }
+
+                currentIndex = 0;
+                displayContent(currentIndex);
+                updateNavigationButtons();
+            } else {
+                showMessage('searchResultsNotFound');
+                searchResults = [];
+            }
+        } catch (error) {
+            console.error('Error fetching non-trending content:', error);
+            showMessage('trendingLoadError');
+        }
+    }
+
     async function fetchSearch(query) {
         try {
-            const response = await fetch(`${SEARCH_URL}${query}&language=${languageMap[currentLanguage]}`);
+            const encodedQuery = encodeURIComponent(query);
+            const SEARCH_URL = `${BASE_URL}/search/multi?api_key=${API_KEY}&query=${encodedQuery}`;
+            const response = await fetch(`${SEARCH_URL}&language=${languageMap[currentLanguage]}`);
             const data = await response.json();
-            searchResults = data.results.filter(item => (item.media_type === 'movie' || item.media_type === 'tv') && item.poster_path);
-            if (searchResults.length === 0) {
+            if (data && data.results) {
+                searchResults = data.results.filter(item => (item.media_type === 'movie' || item.media_type === 'tv') && item.poster_path);
+                if (searchResults.length === 0) {
+                    showMessage('searchResultsNotFound');
+                }
+                currentIndex = 0;
+                displayContent(currentIndex);
+            } else {
                 showMessage('searchResultsNotFound');
+                searchResults = [];
             }
-            currentIndex = 0;
-            displayContent(currentIndex);
             updateNavigationButtons();
         } catch (error) {
             console.error('Error fetching search results:', error);
@@ -602,7 +711,21 @@
         currentLanguage = event.target.value;
         updateUI();
         fetchGenres();
-        fetchTrendingContent();
+        if (trendingSwitch.checked) {
+            fetchTrendingContent();
+        } else {
+            fetchNonTrendingContent();
+        }
+    });
+
+    trendingSwitch.addEventListener('change', (event) => {
+        if (event.target.checked) {
+            // Switch is ON: Show trending
+            fetchTrendingContent();
+        } else {
+            // Switch is OFF: Show non-trending movies
+            fetchNonTrendingContent();
+        }
     });
 
     searchButton.addEventListener('click', () => {
@@ -618,7 +741,7 @@
         if (searchResults.length > 0) {
             const currentTitle = searchResults[currentIndex].title || searchResults[currentIndex].name;
             if (currentTitle) {
-                const formattedTitle = currentTitle.replace(/\s+/g, '-');
+                const formattedTitle = currentTitle.replace(/[^\w\s]/gi, '').replace(/\s+/g, '-').toLowerCase();
                 const telegramUrl = `${TELEGRAM_BOT_URL}${formattedTitle}`;
                 window.open(telegramUrl, '_blank');
             }
@@ -649,9 +772,10 @@
 
     window.onload = () => {
         fetchGenres();
-        fetchTrendingContent();
         languageSelector.value = 'en';
         updateUI();
+        trendingSwitch.checked = false;
+        fetchNonTrendingContent();
     };
 
 </script>
