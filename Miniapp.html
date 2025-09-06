@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minato V5.1</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>The Hell King</title>
+    <link href="./dist/output.css" rel="stylesheet">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
@@ -193,26 +193,6 @@
             outline: none;
             margin-left: 1rem;
         }
-        .llm-buttons {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-            flex-direction: column;
-            width: 100%;
-        }
-        .llm-button {
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            transition: all 0.2s ease-in-out;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            background-color: #58a6ff;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
     </style>
 </head>
 <body>
@@ -223,10 +203,10 @@
         <span class="header-title" id="header-title"></span>
         <select id="language-selector" class="language-selector">
             <option value="en">English</option>
-            <option value="bn"></option>
-            <option value="hi"></option>
-            <option value="ta"></option>
-            <option value="te"></option>
+            <option value="bn">বাংলা</option>
+            <option value="hi">हिन्दी</option>
+            <option value="ta">தமிழ்</option>
+            <option value="te">తెలుగు</option>
         </select>
     </div>
 
@@ -244,8 +224,8 @@
     </div>
 
     <div class="nav-buttons">
-        <button id="back-button" class="nav-button back" disabled></button>
-        <button id="next-button" class="nav-button next" disabled></button>
+        <button id="back-button" class="nav-button back"></button>
+        <button id="next-button" class="nav-button next"></button>
     </div>
 
     <div class="footer">
@@ -284,7 +264,7 @@
     const runtimeElem = document.getElementById('runtime');
     const genresContainer = document.getElementById('genres-container');
     const storylineElem = document.getElementById('storyline');
-    
+
     // Map language codes to their TMDB format
     const languageMap = {
         'en': 'en-US',
@@ -293,16 +273,16 @@
         'ta': 'ta-IN',
         'te': 'te-IN'
     };
-    
+
     const genreMap = new Map();
 
     const translations = {
         en: {
-            headerTitle: 'Minato V5.1 ',
+            headerTitle: 'The Hell King ✨',
             searchPlaceholder: 'Search movies or series...',
             searchButton: 'Search',
-            backButton: ' Back',
-            nextButton: 'Next ',
+            backButton: '← Shuffle',
+            nextButton: 'Shuffle →',
             titleLabel: 'Title:',
             typeLabel: 'Type:',
             ratingLabel: 'Rating:',
@@ -310,15 +290,15 @@
             runtimeLabel: 'Runtime:',
             genresLabel: 'Genres:',
             storylineLabel: 'Storyline:',
-            movieType: 'Movie ',
-            seriesType: 'Series ',
+            movieType: 'Movie 🎬',
+            seriesType: 'Series 📺',
             unknown: 'Unknown',
             noStoryline: 'No storyline available.',
             posterNotFound: 'Poster Not Found',
             searchResultsNotFound: 'No search results found.',
             searchPrompt: 'Please enter something to search for.',
             trendingLoadError: 'Failed to load trending content.',
-            poweredBy: 'Powered by Minato V5.1',
+            poweredBy: 'Powered by The Hell King',
             closeButton: 'Close',
             mins: 'minutes',
             minsPerEp: 'mins/ep',
@@ -326,116 +306,116 @@
             apiForbiddenError: 'API key error. Your environment may not have a valid API key, or it may have expired.'
         },
         bn: {
-            headerTitle: ' V5.1 ',
-            searchPlaceholder: '   ...',
-            searchButton: '',
-            backButton: ' ',
-            nextButton: ' ',
-            titleLabel: ':',
-            typeLabel: ':',
-            ratingLabel: ':',
-            releaseDateLabel: ' :',
-            runtimeLabel: ':',
-            genresLabel: ':',
-            storylineLabel: ' :',
-            movieType: ' ',
-            seriesType: ' ',
-            unknown: '',
-            noStoryline: '   ',
-            posterNotFound: '  ',
-            searchResultsNotFound: '    ',
-            searchPrompt: '    ',
-            trendingLoadError: '     ',
-            poweredBy: 'Powered by Minato V5.1',
-            closeButton: ' ',
-            mins: '',
-            minsPerEp: '/',
-            noTranslatedStoryline: '        ',
-            apiForbiddenError: 'API key-     API key ,     '
+            headerTitle: 'দ্য হেল কিং ✨',
+            searchPlaceholder: 'মুভি বা সিরিজ খুঁজুন...',
+            searchButton: 'অনুসন্ধান',
+            backButton: '← অদলবদল',
+            nextButton: 'অদলবদল →',
+            titleLabel: 'টাইটেল:',
+            typeLabel: 'ধরন:',
+            ratingLabel: 'রেটিং:',
+            releaseDateLabel: 'রিলিজ ডেট:',
+            runtimeLabel: 'রানটাইম:',
+            genresLabel: 'জনরা:',
+            storylineLabel: 'স্টোরি লাইন:',
+            movieType: 'চলচ্চিত্র 🎬',
+            seriesType: 'সিরিজ 📺',
+            unknown: 'অজানা',
+            noStoryline: 'কোনো স্টোরি লাইন নেই।',
+            posterNotFound: 'পোস্টার পাওয়া যায়নি',
+            searchResultsNotFound: 'অনুসন্ধানে কোনো ফলাফল পাওয়া যায়নি।',
+            searchPrompt: 'অনুসন্ধান করার জন্য কিছু লিখুন।',
+            trendingLoadError: 'ট্রেন্ডিং কন্টেন্ট লোড করতে সমস্যা হয়েছে।',
+            poweredBy: 'Powered by The Hell King',
+            closeButton: 'বন্ধ করুন',
+            mins: 'মিনিট',
+            minsPerEp: 'মিনিট/এপিসোড',
+            noTranslatedStoryline: 'এই ভাষায় কোনো স্টোরি লাইন নেই। মূলটি দেখানো হচ্ছে।',
+            apiForbiddenError: 'API key-তে ত্রুটি। আপনার পরিবেশে বৈধ API key নেই, অথবা মেয়াদ শেষ হয়ে গেছে।'
         },
         hi: {
-            headerTitle: ' V5.1 ',
-            searchPlaceholder: '   ...',
-            searchButton: '',
-            backButton: ' ',
-            nextButton: ' ',
-            titleLabel: ':',
-            typeLabel: ':',
-            ratingLabel: ':',
-            releaseDateLabel: '  :',
-            runtimeLabel: ':',
-            genresLabel: ':',
-            storylineLabel: ':',
-            movieType: ' ',
-            seriesType: ' ',
-            unknown: '',
-            noStoryline: '    ',
-            posterNotFound: '  ',
-            searchResultsNotFound: '     ',
-            searchPrompt: '  .',
-            trendingLoadError: '     ',
-            poweredBy: 'Powered by Minato V5.1',
-            closeButton: ' ',
-            mins: '',
-            minsPerEp: '/',
-            noTranslatedStoryline: '            ',
-            apiForbiddenError: 'API key       API key    ,        '
+            headerTitle: 'द हेल किंग ✨',
+            searchPlaceholder: 'मूवी या सीरीज खोजें...',
+            searchButton: 'खोजें',
+            backButton: '← शफल',
+            nextButton: 'शफल →',
+            titleLabel: 'शीर्षक:',
+            typeLabel: 'प्रकार:',
+            ratingLabel: 'रेटिंग:',
+            releaseDateLabel: 'रिलीज की तारीख:',
+            runtimeLabel: 'रनटाइम:',
+            genresLabel: 'शैलियाँ:',
+            storylineLabel: 'कहानी:',
+            movieType: 'फिल्म 🎬',
+            seriesType: 'सीरीज 📺',
+            unknown: 'अज्ञात',
+            noStoryline: 'कोई कहानी उपलब्ध नहीं है।',
+            posterNotFound: 'पोस्टर नहीं मिला',
+            searchResultsNotFound: 'खोज में कोई परिणाम नहीं मिला।',
+            searchPrompt: 'कृपया कुछ लिखें.',
+            trendingLoadError: 'ट्रेंडिंग सामग्री लोड करने में विफल।',
+            poweredBy: 'Powered by The Hell King',
+            closeButton: 'बंद करें',
+            mins: 'मिनट',
+            minsPerEp: 'मिनट/एपिसोड',
+            noTranslatedStoryline: 'इस भाषा में कोई कहानी उपलब्ध नहीं है। मूल दिखाया जा रहा है।',
+            apiForbiddenError: 'API key में त्रुटि। आपके वातावरण में वैध API key नहीं हो सकती है, या उसकी समय सीमा समाप्त हो गई है।'
         },
         ta: {
-            headerTitle: ' V5.1 ',
-            searchPlaceholder: '   ...',
-            searchButton: '',
-            backButton: ' ',
-            nextButton: ' ',
-            titleLabel: ':',
-            typeLabel: ':',
-            ratingLabel: ':',
-            releaseDateLabel: ' :',
-            runtimeLabel: ':',
-            genresLabel: ':',
-            storylineLabel: ' :',
-            movieType: ' ',
-            seriesType: ' ',
-            unknown: '',
-            noStoryline: '  .',
-            posterNotFound: ' ',
-            searchResultsNotFound: '  .',
-            searchPrompt: ' .',
-            trendingLoadError: '   .',
-            poweredBy: 'Powered by Minato V5.1',
-            closeButton: '',
-            mins: '',
-            minsPerEp: '/',
-            noTranslatedStoryline: '   .  .',
-            apiForbiddenError: 'API  .    API       .'
+            headerTitle: 'தி ஹெல் கிங் ✨',
+            searchPlaceholder: 'திரைப்படம் அல்லது தொடரை தேடு...',
+            searchButton: 'தேடு',
+            backButton: '← மாற்று',
+            nextButton: 'மாற்று →',
+            titleLabel: 'தலைப்பு:',
+            typeLabel: 'வகை:',
+            ratingLabel: 'மதிப்பீடு:',
+            releaseDateLabel: 'வெளியீட்டு தேதி:',
+            runtimeLabel: 'நேரம்:',
+            genresLabel: 'வகைகள்:',
+            storylineLabel: 'கதைச் சுருக்கம்:',
+            movieType: 'திரைப்படம் 🎬',
+            seriesType: 'தொடர் 📺',
+            unknown: 'தெரியாதது',
+            noStoryline: 'கதைச் சுருக்கம் இல்லை.',
+            posterNotFound: 'போஸ்டர் கிடைக்கவில்லை',
+            searchResultsNotFound: 'தேடல் முடிவுகள் இல்லை.',
+            searchPrompt: 'ஏதாவது உள்ளிடுங்கள்.',
+            trendingLoadError: 'பிரபல உள்ளடக்கத்தை ஏற்றுவதில் தோல்வி.',
+            poweredBy: 'Powered by The Hell King',
+            closeButton: 'மூடு',
+            mins: 'நிமிடங்கள்',
+            minsPerEp: 'நிமிடங்கள்/அத்தியாயம்',
+            noTranslatedStoryline: 'இந்த மொழியில் கதைச்சுருக்கம் இல்லை. அசல் காட்டப்படுகிறது.',
+            apiForbiddenError: 'API விசையில் பிழை. உங்கள் சூழலில் சரியான API விசை இல்லாமல் இருக்கலாம் அல்லது அதன் காலாவதி முடிந்துவிட்டது.'
         },
         te: {
-            headerTitle: ' V5.1 ',
-            searchPlaceholder: '    ...',
-            searchButton: '',
-            backButton: ' ',
-            nextButton: ' ',
-            titleLabel: ':',
-            typeLabel: ':',
-            ratingLabel: ':',
-            releaseDateLabel: ' :',
-            runtimeLabel: ' :',
-            genresLabel: ':',
-            storylineLabel: ':',
-            movieType: ' ',
-            seriesType: ' ',
-            unknown: '',
-            noStoryline: '  .',
-            posterNotFound: ' .',
-            searchResultsNotFound: '   .',
-            searchPrompt: '  .',
-            trendingLoadError: '    .',
-            poweredBy: 'Powered by Minato V5.1',
-            closeButton: '',
-            mins: '',
-            minsPerEp: '/',
-            noTranslatedStoryline: '    .  .',
-            apiForbiddenError: 'API  .     API       '
+            headerTitle: 'ది హెల్ కింగ్ ✨',
+            searchPlaceholder: 'సినిమా లేదా సిరీస్ కోసం వెతకండి...',
+            searchButton: 'వెతకండి',
+            backButton: '← మార్చు',
+            nextButton: 'మార్చు →',
+            titleLabel: 'శీర్షిక:',
+            typeLabel: 'రకం:',
+            ratingLabel: 'రేటింగ్:',
+            releaseDateLabel: 'విడుదల తేదీ:',
+            runtimeLabel: 'నడుస్తున్న సమయం:',
+            genresLabel: 'శైలులు:',
+            storylineLabel: 'కథాంశం:',
+            movieType: 'సినిమా 🎬',
+            seriesType: 'సిరీస్ 📺',
+            unknown: 'తెలియదు',
+            noStoryline: 'కథాంశం అందుబాటులో లేదు.',
+            posterNotFound: 'పోస్టర్ కనుగొనబడలేదు.',
+            searchResultsNotFound: 'వెతుకుటలో ఎలాంటి ఫలితాలు లభించలేదు.',
+            searchPrompt: 'దయచేసి ఏదైనా వ్రాయండి.',
+            trendingLoadError: 'ట్రెండింగ్ కంటెంట్ లోడ్ చేయడంలో విఫలమైంది.',
+            poweredBy: 'Powered by The Hell King',
+            closeButton: 'మూసివేయండి',
+            mins: 'నిమిషాలు',
+            minsPerEp: 'నిమిషాలు/ఎపిసోడ్',
+            noTranslatedStoryline: 'ఈ భాషలో కథాంశం అందుబాటులో లేదు. అసలు ప్రదర్శించబడుతోంది।',
+            apiForbiddenError: 'API కీలో లోపం. మీ వాతావరణంలో చెల్లుబాటు అయ్యే API కీ ఉండకపోవచ్చు లేదా దాని గడువు ముగిసి ఉండవచ్చు।'
         }
     };
 
@@ -508,8 +488,7 @@
             if (searchResults.length === 0) {
                 showMessage('searchResultsNotFound');
             }
-            currentIndex = 0;
-            displayContent();
+            displayRandomContent();
         } catch (error) {
             console.error('Error fetching trending content:', error);
             showMessage('trendingLoadError');
@@ -524,8 +503,7 @@
             if (searchResults.length === 0) {
                 showMessage('searchResultsNotFound');
             }
-            currentIndex = 0;
-            displayContent();
+            displayRandomContent();
         } catch (error) {
             console.error('Error fetching search results:', error);
             showMessage('searchResultsNotFound');
@@ -542,17 +520,17 @@
         }
     }
 
-    function displayContent() {
+    function displayContent(index) {
         if (searchResults.length === 0) {
             mainCard.classList.add('hidden');
             backButton.disabled = true;
             nextButton.disabled = true;
             return;
         }
-        
+
         mainCard.classList.remove('hidden');
-        const content = searchResults[currentIndex];
-        
+        const content = searchResults[index];
+
         // Fetch translated content details
         fetchDetails(content.id, content.media_type).then(translatedDetails => {
             let displayedOverview = content.overview;
@@ -604,9 +582,13 @@
                 genresContainer.appendChild(span);
             }
         });
+    }
 
-        backButton.disabled = currentIndex === 0;
-        nextButton.disabled = currentIndex === searchResults.length - 1;
+    function displayRandomContent() {
+        if (searchResults.length > 0) {
+            const randomIndex = Math.floor(Math.random() * searchResults.length);
+            displayContent(randomIndex);
+        }
     }
 
     languageSelector.addEventListener('change', (event) => {
@@ -626,17 +608,11 @@
     });
 
     backButton.addEventListener('click', () => {
-        if (currentIndex > 0) {
-            currentIndex--;
-            displayContent();
-        }
+        displayRandomContent();
     });
 
     nextButton.addEventListener('click', () => {
-        if (currentIndex < searchResults.length - 1) {
-            currentIndex++;
-            displayContent();
-        }
+        displayRandomContent();
     });
 
     searchInput.addEventListener('keypress', (event) => {
