@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Hell King</title>
     <link href="./dist/output.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
@@ -199,7 +200,6 @@
 
 <div class="container">
     <div class="header">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
         <span class="header-title" id="header-title"></span>
         <select id="language-selector" class="language-selector">
             <option value="en">English</option>
@@ -230,6 +230,7 @@
 
     <div class="footer">
         <p class="powered-by" id="powered-by-text"></p>
+        <button id="search-telegram-button" class="nav-button mt-2" style="background: linear-gradient(to right, #0088cc, #42a5f5); color: white;">Search on Telegram</button>
     </div>
 
     <div class="search-container">
@@ -244,17 +245,18 @@
     const TRENDING_URL = `${BASE_URL}/trending/all/week?api_key=${API_KEY}`;
     const SEARCH_URL = `${BASE_URL}/search/multi?api_key=${API_KEY}&query=`;
     const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+    const TELEGRAM_BOT_URL = 'https://telegram.me/Hell_King_69_Bot?start=getfile-';
 
     let searchResults = [];
     let currentIndex = 0;
     let currentLanguage = 'en';
 
-    // Get all the DOM elements and assign them to variables
     const languageSelector = document.getElementById('language-selector');
     const searchInput = document.getElementById('search-input');
     const searchButton = document.getElementById('search-button');
     const backButton = document.getElementById('back-button');
     const nextButton = document.getElementById('next-button');
+    const searchTelegramButton = document.getElementById('search-telegram-button');
     const mainCard = document.getElementById('main-card');
     const poster = document.getElementById('poster');
     const titleElem = document.getElementById('title');
@@ -265,7 +267,6 @@
     const genresContainer = document.getElementById('genres-container');
     const storylineElem = document.getElementById('storyline');
 
-    // Map language codes to their TMDB format
     const languageMap = {
         'en': 'en-US',
         'bn': 'bn-BD',
@@ -281,8 +282,8 @@
             headerTitle: 'The Hell King ✨',
             searchPlaceholder: 'Search movies or series...',
             searchButton: 'Search',
-            backButton: '← Shuffle',
-            nextButton: 'Shuffle →',
+            backButton: '← Back',
+            nextButton: 'Next →',
             titleLabel: 'Title:',
             typeLabel: 'Type:',
             ratingLabel: 'Rating:',
@@ -309,8 +310,8 @@
             headerTitle: 'দ্য হেল কিং ✨',
             searchPlaceholder: 'মুভি বা সিরিজ খুঁজুন...',
             searchButton: 'অনুসন্ধান',
-            backButton: '← অদলবদল',
-            nextButton: 'অদলবদল →',
+            backButton: '← আগের',
+            nextButton: 'পরের →',
             titleLabel: 'টাইটেল:',
             typeLabel: 'ধরন:',
             ratingLabel: 'রেটিং:',
@@ -337,8 +338,8 @@
             headerTitle: 'द हेल किंग ✨',
             searchPlaceholder: 'मूवी या सीरीज खोजें...',
             searchButton: 'खोजें',
-            backButton: '← शफल',
-            nextButton: 'शफल →',
+            backButton: '← पिछला',
+            nextButton: 'अगला →',
             titleLabel: 'शीर्षक:',
             typeLabel: 'प्रकार:',
             ratingLabel: 'रेटिंग:',
@@ -365,8 +366,8 @@
             headerTitle: 'தி ஹெல் கிங் ✨',
             searchPlaceholder: 'திரைப்படம் அல்லது தொடரை தேடு...',
             searchButton: 'தேடு',
-            backButton: '← மாற்று',
-            nextButton: 'மாற்று →',
+            backButton: '← முந்தையது',
+            nextButton: 'அடுத்தது →',
             titleLabel: 'தலைப்பு:',
             typeLabel: 'வகை:',
             ratingLabel: 'மதிப்பீடு:',
@@ -393,8 +394,8 @@
             headerTitle: 'ది హెల్ కింగ్ ✨',
             searchPlaceholder: 'సినిమా లేదా సిరీస్ కోసం వెతకండి...',
             searchButton: 'వెతకండి',
-            backButton: '← మార్చు',
-            nextButton: 'మార్చు →',
+            backButton: '← వెనక్కి',
+            nextButton: 'తర్వాత →',
             titleLabel: 'శీర్షిక:',
             typeLabel: 'రకం:',
             ratingLabel: 'రేటింగ్:',
@@ -427,6 +428,7 @@
         searchButton.textContent = t.searchButton;
         backButton.textContent = t.backButton;
         nextButton.textContent = t.nextButton;
+        searchTelegramButton.textContent = 'Search on Telegram';
         document.getElementById('title-label').textContent = t.titleLabel;
         document.getElementById('type-label').textContent = t.typeLabel;
         document.getElementById('rating-label').textContent = t.ratingLabel;
@@ -435,6 +437,8 @@
         document.getElementById('genres-label').textContent = t.genresLabel;
         document.getElementById('storyline-label').textContent = t.storylineLabel;
         document.getElementById('powered-by-text').textContent = t.poweredBy;
+
+        updateNavigationButtons();
     }
 
     function showMessage(messageKey, titleKey = null) {
@@ -488,7 +492,9 @@
             if (searchResults.length === 0) {
                 showMessage('searchResultsNotFound');
             }
-            displayRandomContent();
+            currentIndex = 0;
+            displayContent(currentIndex);
+            updateNavigationButtons();
         } catch (error) {
             console.error('Error fetching trending content:', error);
             showMessage('trendingLoadError');
@@ -503,7 +509,9 @@
             if (searchResults.length === 0) {
                 showMessage('searchResultsNotFound');
             }
-            displayRandomContent();
+            currentIndex = 0;
+            displayContent(currentIndex);
+            updateNavigationButtons();
         } catch (error) {
             console.error('Error fetching search results:', error);
             showMessage('searchResultsNotFound');
@@ -523,15 +531,12 @@
     function displayContent(index) {
         if (searchResults.length === 0) {
             mainCard.classList.add('hidden');
-            backButton.disabled = true;
-            nextButton.disabled = true;
             return;
         }
 
         mainCard.classList.remove('hidden');
         const content = searchResults[index];
 
-        // Fetch translated content details
         fetchDetails(content.id, content.media_type).then(translatedDetails => {
             let displayedOverview = content.overview;
             if (translatedDetails && translatedDetails.overview) {
@@ -568,7 +573,6 @@
                     genresContainer.appendChild(span);
                 });
             } else if (content.genre_ids && content.genre_ids.length > 0) {
-                // Fallback to English genre names if translated ones are not available
                 content.genre_ids.forEach(genreId => {
                     const genreName = genreMap.get(genreId) || translations[currentLanguage].unknown;
                     const span = document.createElement('span');
@@ -584,10 +588,13 @@
         });
     }
 
-    function displayRandomContent() {
+    function updateNavigationButtons() {
         if (searchResults.length > 0) {
-            const randomIndex = Math.floor(Math.random() * searchResults.length);
-            displayContent(randomIndex);
+            backButton.disabled = currentIndex === 0;
+            nextButton.disabled = currentIndex === searchResults.length - 1;
+        } else {
+            backButton.disabled = true;
+            nextButton.disabled = true;
         }
     }
 
@@ -607,12 +614,31 @@
         }
     });
 
+    searchTelegramButton.addEventListener('click', () => {
+        if (searchResults.length > 0) {
+            const currentTitle = searchResults[currentIndex].title || searchResults[currentIndex].name;
+            if (currentTitle) {
+                const formattedTitle = currentTitle.replace(/\s+/g, '-');
+                const telegramUrl = `${TELEGRAM_BOT_URL}${formattedTitle}`;
+                window.open(telegramUrl, '_blank');
+            }
+        }
+    });
+
     backButton.addEventListener('click', () => {
-        displayRandomContent();
+        if (currentIndex > 0) {
+            currentIndex--;
+            displayContent(currentIndex);
+            updateNavigationButtons();
+        }
     });
 
     nextButton.addEventListener('click', () => {
-        displayRandomContent();
+        if (currentIndex < searchResults.length - 1) {
+            currentIndex++;
+            displayContent(currentIndex);
+            updateNavigationButtons();
+        }
     });
 
     searchInput.addEventListener('keypress', (event) => {
