@@ -26,7 +26,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh;
+            height: 100%; /* Changed from 100vh to 100% to allow content to flow */
         }
         .header {
             width: 100%;
@@ -35,6 +35,7 @@
             justify-content: space-between;
             padding: 1rem;
             color: #E0E6F0;
+            z-index: 10;
         }
         .header-title {
             font-size: 1.25rem;
@@ -55,6 +56,8 @@
             transition: all 0.3s ease-in-out;
             animation: fadeIn 0.8s ease-out;
             flex-grow: 1;
+            z-index: 5;
+            overflow-y: auto; /* Added to handle overflow of large content */
         }
         .content-image {
             width: 100%;
@@ -73,7 +76,6 @@
             width: 100%;
             text-align: left;
             margin-top: 1rem;
-            overflow-y: auto;
             padding-right: 0.5rem;
         }
         .content-details p {
@@ -103,6 +105,7 @@
             width: 100%;
             margin-top: 1rem;
             padding: 0 1rem;
+            z-index: 10;
         }
         .nav-button {
             flex-grow: 1;
@@ -131,12 +134,14 @@
             margin-top: 1rem;
             width: 100%;
             text-align: center;
+            z-index: 10;
         }
         .search-container {
             display: flex;
             width: 95%;
             gap: 0.5rem;
             margin-bottom: 1rem;
+            z-index: 10;
         }
         .search-input {
             flex-grow: 1;
@@ -221,6 +226,7 @@
             overflow: hidden;
             background-color: #2d3748;
             border: 1px solid #4a5568;
+            z-index: 10;
         }
         .category-tab {
             flex: 1;
@@ -231,6 +237,7 @@
             cursor: pointer;
             transition: all 0.2s ease-in-out;
             color: #99a2b0;
+            background-color: #2d3748;
         }
         .category-tab.active {
             background-color: #4a90e2;
@@ -361,6 +368,8 @@
     let currentIndex = 0;
     let currentLanguage = 'en';
     let currentCategory = 'movies';
+    let touchStartX = 0;
+    const swipeThreshold = 50;
 
     const languageSelector = document.getElementById('language-selector');
     const searchInput = document.getElementById('search-input');
@@ -779,8 +788,33 @@
     
     function setActiveTab(tab) {
         document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
+        if (tab) {
+            tab.classList.add('active');
+        }
     }
+    
+    // Swipe Gestures
+    mainContent.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+    });
+
+    mainContent.addEventListener('touchmove', (e) => {
+        // This is important to prevent scrolling while swiping
+        e.preventDefault();
+    });
+
+    mainContent.addEventListener('touchend', (e) => {
+        const touchEndX = e.changedTouches[0].clientX;
+        const swipeDistance = touchEndX - touchStartX;
+        
+        if (swipeDistance > swipeThreshold) {
+            // Swiped right (previous)
+            backButton.click();
+        } else if (swipeDistance < -swipeThreshold) {
+            // Swiped left (next)
+            nextButton.click();
+        }
+    });
 
     languageSelector.addEventListener('change', (event) => {
         currentLanguage = event.target.value;
