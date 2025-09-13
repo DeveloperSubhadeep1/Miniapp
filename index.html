@@ -13,18 +13,23 @@
             background-color: #1a202c;
             color: #E0E6F0;
             overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+            display: flex; /* Make the body a flex container */
+            flex-direction: column; /* Stack children vertically */
+            min-height: 100vh; /* Ensure the body takes at least the full viewport height */
+        }
+        
+        .app-container {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            min-height: 100vh;
-            padding: 0;
-            margin: 0;
+            width: 100%;
+            max-width: 480px;
+            margin: auto; /* Center the container horizontally */
+            flex-grow: 1; /* Allow the container to take remaining vertical space */
+            padding-bottom: 1rem;
         }
 
-        /* The container div has been removed. All elements are now direct children of body.
-           This allows flex properties to work directly on the main layout. */
-        
         .header {
             width: 100%;
             display: flex;
@@ -49,14 +54,12 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            margin-top: 1rem;
+            margin: 1rem auto; /* Center the main content */
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease-in-out;
             animation: fadeIn 0.8s ease-out;
-            /* This is the key fix. It takes all remaining vertical space. */
-            flex-grow: 1;
-            /* This allows the content inside to be scrollable. */
-            overflow-y: auto;
+            flex-grow: 1; /* This allows the content area to fill available space */
+            overflow-y: auto; /* This makes the content scrollable */
             z-index: 5;
         }
         .content-image {
@@ -140,7 +143,7 @@
             display: flex;
             width: 95%;
             gap: 0.5rem;
-            margin-bottom: 1rem;
+            margin: 1rem auto;
             z-index: 10;
         }
         .search-input {
@@ -221,7 +224,7 @@
         .category-tabs {
             display: flex;
             width: 95%;
-            margin-top: 1rem;
+            margin: 1rem auto;
             border-radius: 0.5rem;
             overflow: hidden;
             background-color: #2d3748;
@@ -286,6 +289,8 @@
 </head>
 <body>
 
+<!-- This new container will manage the overall app layout -->
+<div class="app-container">
     <div class="header">
         <span class="header-title" id="header-title"></span>
         <select id="language-selector" class="language-selector">
@@ -355,6 +360,7 @@
         </div>
         <p class="powered-by mt-2" id="powered-by-text"></p>
     </div>
+</div>
 
 <script>
     const API_KEY = '1c4187f895ad7e2b461e96e3c621c9d3';
@@ -790,29 +796,6 @@
         }
     }
     
-    // Swipe Gestures
-    mainContent.addEventListener('touchstart', (e) => {
-        touchStartX = e.touches[0].clientX;
-    });
-
-    mainContent.addEventListener('touchmove', (e) => {
-        // This is important to prevent scrolling while swiping
-        e.preventDefault();
-    });
-
-    mainContent.addEventListener('touchend', (e) => {
-        const touchEndX = e.changedTouches[0].clientX;
-        const swipeDistance = touchEndX - touchStartX;
-        
-        if (swipeDistance > swipeThreshold) {
-            // Swiped right (previous)
-            backButton.click();
-        } else if (swipeDistance < -swipeThreshold) {
-            // Swiped left (next)
-            nextButton.click();
-        }
-    });
-
     languageSelector.addEventListener('change', (event) => {
         currentLanguage = event.target.value;
         updateUI();
@@ -888,4 +871,5 @@
 </script>
 
 </body>
-</html>
+    </html>
+    
