@@ -10,7 +10,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #1a202c; /* Updated background for a more Telegram-like feel */
+            background-color: #1a202c;
             color: #E0E6F0;
             overflow-x: hidden;
             display: flex;
@@ -18,16 +18,13 @@
             align-items: center;
             justify-content: flex-start;
             min-height: 100vh;
-        }
-        .container {
-            width: 100%;
-            max-width: 480px;
             padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            /* Removed height: 100% to let flex-grow on main-content handle height */
+            margin: 0;
         }
+
+        /* The container div has been removed. All elements are now direct children of body.
+           This allows flex properties to work directly on the main layout. */
+        
         .header {
             width: 100%;
             display: flex;
@@ -41,9 +38,10 @@
             font-size: 1.25rem;
             font-weight: 600;
         }
+
         .main-content {
             width: 95%;
-            background-color: #2d3748; /* Darker card background */
+            background-color: #2d3748;
             border: 1px solid #4a5568;
             border-radius: 0.75rem;
             padding: 1rem;
@@ -55,9 +53,11 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease-in-out;
             animation: fadeIn 0.8s ease-out;
-            flex-grow: 1; /* This is the key change, letting it fill available space */
-            z-index: 5;
+            /* This is the key fix. It takes all remaining vertical space. */
+            flex-grow: 1;
+            /* This allows the content inside to be scrollable. */
             overflow-y: auto;
+            z-index: 5;
         }
         .content-image {
             width: 100%;
@@ -82,7 +82,7 @@
             margin-bottom: 0.5rem;
         }
         .content-details .label {
-            color: #4a90e2; /* Telegram blue */
+            color: #4a90e2;
             font-weight: 500;
         }
         .genres-container {
@@ -116,7 +116,7 @@
             cursor: pointer;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
             color: white;
-            background: #4a90e2; /* Telegram blue */
+            background: #4a90e2;
         }
         .nav-button:disabled {
             background-color: #556070;
@@ -286,7 +286,6 @@
 </head>
 <body>
 
-<div class="container">
     <div class="header">
         <span class="header-title" id="header-title"></span>
         <select id="language-selector" class="language-selector">
@@ -356,7 +355,6 @@
         </div>
         <p class="powered-by mt-2" id="powered-by-text"></p>
     </div>
-</div>
 
 <script>
     const API_KEY = '1c4187f895ad7e2b461e96e3c621c9d3';
@@ -533,7 +531,6 @@
             noStoryline: 'కథాంశం అందుబాటులో లేదు.',
             posterNotFound: 'పోస్టర్ కనుగొనబడలేదు.',
             searchResultsNotFound: 'క్షమించండి, ఎలాంటి ఫలితాలు లభించలేదు. దయచేసి మరొకటి ప్రయత్నించండి.',
-            searchPrompt: 'దయచేసి ఏదైనా వ్రాయండి.',
             trendingLoadError: 'ట్రెండింగ్ కంటెంట్ లోడ్ చేయడంలో విఫలమైంది.',
             poweredBy: 'Powered by The Hell King',
             closeButton: 'మూసివేయండి',
