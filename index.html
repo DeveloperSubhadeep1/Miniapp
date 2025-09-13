@@ -26,7 +26,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100%; /* Changed from 100vh to 100% to allow content to flow */
+            /* Removed height: 100% to let flex-grow on main-content handle height */
         }
         .header {
             width: 100%;
@@ -55,9 +55,9 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             transition: all 0.3s ease-in-out;
             animation: fadeIn 0.8s ease-out;
-            flex-grow: 1;
+            flex-grow: 1; /* This is the key change, letting it fill available space */
             z-index: 5;
-            overflow-y: auto; /* Added to handle overflow of large content */
+            overflow-y: auto;
         }
         .content-image {
             width: 100%;
