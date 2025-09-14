@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Universe Explorer</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap">
+    <!-- React & ReactDOM CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel Standalone CDN for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- D3.js CDN -->
+    <script src="https://unpkg.com/d3@7"></script>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* dark-blue-900 */
+            color: #e2e8f0; /* light-gray-200 */
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #2d3748; /* dark-blue-800 */
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #4a5568; /* dark-blue-600 */
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: #636b77; /* dark-blue-500 */
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        .node {
+            cursor: pointer;
+        }
+        .node circle {
+            stroke: #fff;
+            stroke-width: 1.5px;
+        }
+        .link {
+            fill: none;
+            stroke: #999;
+            stroke-opacity: 0.6;
+            stroke-width: 1.5px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        const { createRoot } = ReactDOM;
+
+        const API_KEY = "1c4187f895ad7e2b461e96e3c621c9d3";
+        const API_BASE_URL = "https://api.themoviedb.org/3";
+        const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500";
+        const PLACEHOLDER_IMG = "https://placehold.co/500x750/1f2937/d1d5db?text=No+Image";
+
+        const App = () => {
+            const [view, setView] = useState('trending');
+            const [data, setData] = useState(null);
+            const [history, setHistory] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
+
+            useEffect(() => {
+                const fetchTrending = async () => {
+                    setLoading(true);
+                    setError(null);
+                    try {
+                        const url = `${API_BASE_URL}/trending/all/day?api_key=${API_KEY}`;
+                        const response = await fetch(url);
+                        const responseData = await response.json();
+                        setData({ type: 'trending', results: responseData.results.filter(item => item.media_type !== 'person') });
+                    } catch (e) {
+                        console.error(e);
+                        setError("Failed to fetch trending content. Please check your network connection.");
+                    } finally {
+                        setLoading(false);
+                    }
+                };
+                fetchTrending();
+            }, []);
+
+            const handleSearch = async (query) => {
+                if (!query) return;
+                setLoading(true);
+                setError(null);
+                const prevHistory = { view, data };
+                setHistory(prev => [...prev, prevHistory]);
+
+                try {
+                    const url = `${API_BASE_URL}/search/multi?query=${encodeURIComponent(query)}&api_key=${API_KEY}`;
+                    const response = await fetch(url);
+                    const responseData = await response.json();
+                    setData({ type: 'search', results: responseData.results.filter(item => item.media_type !== 'person' || item.profile_path) });
+                    setView('search');
+                } catch (e) {
+                    console.error(e);
+                    setError("Failed to fetch search results. Please try again later.");
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const fetchDetails = async (id, mediaType) => {
+                setLoading(true);
+                setError(null);
+                const prevHistory = { view, data };
+                setHistory(prev => [...prev, prevHistory]);
+
+                try {
+                    const url = `${API_BASE_URL}/${mediaType}/${id}?api_key=${API_KEY}&append_to_response=credits,genres,videos,recommendations`;
+                    const response = await fetch(url);
+                    const details = await response.json();
+                    setData(details);
+                    setView('details');
+                } catch (e) {
+                console.error(e);
+                setError("Failed to fetch details.");
+                } finally {
+                setLoading(false);
+                }
+            };
+
+            const fetchPersonDetails = async (id) => {
+                setLoading(true);
+                setError(null);
+                const prevHistory = { view, data };
+                setHistory(prev => [...prev, prevHistory]);
+
+                try {
+                    const url = `${API_BASE_URL}/person/${id}?api_key=${API_KEY}&append_to_response=combined_credits`;
+                    const response = await fetch(url);
+                    const details = await response.json();
+                    setData(details);
+                    setView('personDetails');
+                } catch (e) {
+                    console.error(e);
+                    setError("Failed to fetch person details.");
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const handleGoBack = () => {
+                if (history.length > 0) {
+                    const lastState = history.pop();
+                    setView(lastState.view);
+                    setData(lastState.data);
+                    setHistory([...history]);
+                }
+            };
+
+            const generateTreeData = (sourceData, sourceType) => {
+                let treeData = {
+                    name: sourceData.title || sourceData.name,
+                    type: sourceType,
+                    data: sourceData,
+                    children: []
+                };
+
+                if (sourceType === 'movie' || sourceType === 'tv') {
+                    // Add recommendations as children
+                    sourceData.recommendations?.results?.slice(0, 5).filter(r => r.poster_path).forEach(rec => {
+                        treeData.children.push({
+                            name: rec.title || rec.name,
+                            type: rec.media_type,
+                            data: rec
+                        });
+                    });
+                } else if (sourceType === 'person') {
+                    // Add known for movies/tv shows as children
+                    sourceData.combined_credits?.cast?.sort((a, b) => b.vote_count - a.vote_count).slice(0, 5).filter(k => k.poster_path).forEach(knownFor => {
+                        treeData.children.push({
+                            name: knownFor.title || knownFor.name,
+                            type: knownFor.media_type,
+                            data: knownFor
+                        });
+                    });
+                }
+                return treeData;
+            };
+
+            const handleExploreUniverse = (data, type) => {
+                const prevHistory = { view, data };
+                setHistory(prev => [...prev, prevHistory]);
+                setData({ type, data });
+                setView('universe');
+            };
+
+            const UniverseVisualization = ({ data, onNodeClick }) => {
+                const svgRef = useRef();
+                const containerRef = useRef();
+
+                useEffect(() => {
+                    if (!data) return;
+
+                    const treeData = generateTreeData(data.data, data.type);
+
+                    const margin = { top: 20, right: 120, bottom: 20, left: 120 };
+                    const containerWidth = containerRef.current.clientWidth;
+                    const containerHeight = containerRef.current.clientHeight;
+
+                    const root = d3.hierarchy(treeData);
+
+                    // Dynamically calculate height based on the number of nodes
+                    const nodeCount = root.leaves().length;
+                    const dynamicHeight = Math.max(containerHeight, nodeCount * 40);
+                    const width = containerWidth;
+
+                    const svg = d3.select(svgRef.current)
+                        .attr("width", width)
+                        .attr("height", dynamicHeight);
+
+                    svg.selectAll("*").remove();
+
+                    const g = svg.append("g")
+                        .attr("transform", `translate(${margin.left},${dynamicHeight / 2})`);
+
+                    const treeLayout = d3.tree()
+                        .nodeSize([40, 100]); // Reduced horizontal spacing
+
+                    const treeNodes = treeLayout(root);
+
+                    // Center the root vertically
+                    const rootOffset = root.x;
+                    treeNodes.each(d => d.x -= rootOffset);
+
+                    const link = g.selectAll(".link")
+                        .data(treeNodes.links())
+                        .enter().append("path")
+                        .attr("class", "link")
+                        .attr("d", d3.linkHorizontal()
+                            .x(d => d.y)
+                            .y(d => d.x));
+
+                    const node = g.selectAll(".node")
+                        .data(treeNodes.descendants())
+                        .enter().append("g")
+                        .attr("class", "node")
+                        .attr("transform", d => `translate(${d.y},${d.x})`);
+
+                    node.append("circle")
+                        .attr("r", d => d.depth === 0 ? 15 : d.data.type === 'person' ? 10 : 8)
+                        .attr("fill", d => {
+                            if (d.depth === 0) return "#ef4444";
+                            if (d.data.type === 'person') return "#3b82f6";
+                            return "#22c55e";
+                        });
+
+                    node.append("text")
+                        .attr("dy", "-.35em") // Adjusted vertical position
+                        .attr("x", d => d.children ? -13 : 13)
+                        .attr("text-anchor", d => d.children ? "end" : "start")
+                        .text(d => d.data.name)
+                        .attr("class", "text-sm fill-current text-gray-300")
+                        .style("text-shadow", "1px 1px 2px #000")
+                        .call(wrapText, d => d.children ? -13 : 13); // Call the new function to wrap the text
+
+                    // Function to wrap text
+                    function wrapText(text, x) {
+                        text.each(function() {
+                            const nodeText = d3.select(this);
+                            const words = nodeText.text().split(/\s+/).reverse();
+                            let word;
+                            let line = [];
+                            let lineNumber = 0;
+                            const lineHeight = 1.2; // ems
+                            const y = nodeText.attr("y") || 0;
+                            const dy = parseFloat(nodeText.attr("dy"));
+                            let tspan = nodeText.text(null).append("tspan").attr("x", x).attr("dy", `${dy}em`);
+                            while (word = words.pop()) {
+                                line.push(word);
+                                tspan.text(line.join(" "));
+                                if (tspan.node().getComputedTextLength() > 100) { // Limit line width
+                                    line.pop();
+                                    tspan.text(line.join(" "));
+                                    line = [word];
+                                    tspan = nodeText.append("tspan").attr("x", x).attr("dy", `${lineHeight}em`).text(word);
+                                }
+                            }
+                        });
+                    }
+
+                    node.on("click", (event, d) => {
+                        if (d.depth === 0) return; // Don't reload the root
+                        if (d.data.type === 'movie' || d.data.type === 'tv') {
+                            onNodeClick(d.data.data.id, d.data.type);
+                        } else if (d.data.type === 'person') {
+                            onNodeClick(d.data.data.id, 'person');
+                        }
+                    });
+
+                }, [data]);
+
+                return (
+                    <div ref={containerRef} className="container mx-auto p-4 md:p-8 mt-16 w-full custom-scrollbar overflow-y-auto" style={{ maxHeight: 'calc(100vh - 6rem)' }}>
+                        <div className="flex justify-center items-center">
+                            <h2 className="text-2xl md:text-3xl font-bold mb-6">Connected Universe</h2>
+                        </div>
+                        <svg ref={svgRef} className="w-full h-auto"></svg>
+                    </div>
+                );
+            };
+
+            const SearchBar = ({ onSearch, showBack }) => {
+                const [query, setQuery] = useState('');
+
+                return (
+                    <div className="fixed top-0 left-0 right-0 z-50 bg-gray-900 border-b border-gray-700 shadow-xl px-4 py-3 flex items-center justify-between">
+                        <div className="flex items-center w-full max-w-2xl mx-auto space-x-2">
+                            {showBack && (
+                                <button
+                                    onClick={handleGoBack}
+                                    className="text-gray-400 hover:text-white transition-colors duration-200 p-2 rounded-full"
+                                    aria-label="Go back"
+                                >
+                                    <i className="fas fa-arrow-left text-lg"></i>
+                                </button>
+                            )}
+                            <div className="relative flex-grow">
+                                <input
+                                    type="text"
+                                    value={query}
+                                    onChange={(e) => setQuery(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') onSearch(query) }}
+                                    placeholder="Search movies, TV shows, and people..."
+                                    className="w-full bg-gray-800 text-gray-200 border border-gray-700 rounded-full py-2 px-5 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                                />
+                                <button
+                                    onClick={() => onSearch(query)}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors duration-200 p-2"
+                                    aria-label="Search"
+                                >
+                                    <i className="fas fa-search text-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const LoadingSpinner = () => (
+                <div className="flex justify-center items-center h-screen">
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+            );
+
+            const ErrorMessage = ({ message }) => (
+                <div className="flex justify-center items-center h-screen text-red-400">
+                    <p>{message}</p>
+                </div>
+            );
+
+            const MovieCard = ({ movie, onSelect }) => {
+                const releaseDate = movie.release_date || movie.first_air_date;
+                const year = releaseDate && typeof releaseDate === 'string' ? new Date(releaseDate).getFullYear() : 'N/A';
+                return (
+                    <div
+                        onClick={() => onSelect(movie.id, movie.media_type || 'movie')}
+                        className="group relative rounded-lg overflow-hidden shadow-lg transform transition-transform duration-300 hover:scale-105 cursor-pointer bg-gray-800 fade-in"
+                    >
+                        <img
+                            src={movie.poster_path ? `${IMAGE_BASE_URL}${movie.poster_path}` : PLACEHOLDER_IMG}
+                            alt={movie.title || movie.name}
+                            className="w-full h-auto object-cover"
+                            onError={(e) => { e.target.src = PLACEHOLDER_IMG; }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+                            <h3 className="text-sm md:text-md lg:text-lg font-bold text-white leading-tight">{movie.title || movie.name}</h3>
+                            <p className="text-xs md:text-sm text-gray-300">{year}</p>
+                        </div>
+                    </div>
+                );
+            };
+
+            const PersonCard = ({ person, onSelect }) => (
+                <div
+                    onClick={() => onSelect(person.id)}
+                    className="rounded-lg overflow-hidden shadow-lg transform transition-transform duration-300 hover:scale-105 cursor-pointer bg-gray-800 flex flex-col items-center p-4 text-center fade-in"
+                >
+                    <img
+                        src={person.profile_path ? `${IMAGE_BASE_URL}${person.profile_path}` : PLACEHOLDER_IMG}
+                        alt={person.name}
+                        className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover border-4 border-gray-700"
+                        onError={(e) => { e.target.src = PLACEHOLDER_IMG; }}
+                    />
+                    <h3 className="text-lg font-bold mt-2">{person.name}</h3>
+                    <p className="text-sm text-gray-400 truncate w-full">{person.known_for_department}</p>
+                </div>
+            );
+
+            const MovieDetails = ({ data, onSelectPerson, onExploreUniverse }) => {
+                const [showFullOverview, setShowFullOverview] = useState(false);
+                const overviewWords = data.overview ? data.overview.split(' ') : [];
+                const isLongOverview = overviewWords.length > 50;
+                const displayOverview = isLongOverview && !showFullOverview ? overviewWords.slice(0, 50).join(' ') + '...' : overviewWords.join(' ');
+
+                const releaseDate = data.release_date || data.first_air_date;
+                const year = releaseDate && typeof releaseDate === 'string' ? new Date(releaseDate).getFullYear() : 'N/A';
+                const genres = data.genres?.map(g => g.name).join(', ') || 'N/A';
+                const rating = data.vote_average ? data.vote_average.toFixed(1) : 'N/A';
+                const cast = data.credits?.cast?.slice(0, 10) || [];
+
+                return (
+                    <div className="container mx-auto p-4 md:p-8 mt-16 custom-scrollbar overflow-y-auto" style={{ maxHeight: 'calc(100vh - 6rem)' }}>
+                        <div className="md:flex md:space-x-8">
+                            <div className="md:w-1/3 flex-shrink-0">
+                                <img
+                                    src={data.poster_path ? `${IMAGE_BASE_URL}${data.poster_path}` : PLACEHOLDER_IMG}
+                                    alt={data.title || data.name}
+                                    className="w-full rounded-lg shadow-xl"
+                                    onError={(e) => { e.target.src = PLACEHOLDER_IMG; }}
+                                />
+                            </div>
+                            <div className="md:w-2/3 mt-6 md:mt-0">
+                                <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold">{data.title || data.name}</h1>
+                                <p className="text-lg md:text-xl text-gray-400 mt-2">{year} • {rating} ⭐ • {genres}</p>
+                                <p className="text-gray-300 mt-4 leading-relaxed">
+                                    {displayOverview}
+                                    {isLongOverview && (
+                                        <button
+                                            onClick={() => setShowFullOverview(!showFullOverview)}
+                                            className="text-blue-400 hover:text-blue-300 ml-1 font-semibold transition-colors"
+                                        >
+                                            {showFullOverview ? 'Read Less' : 'Read More'}
+                                        </button>
+                                    )}
+                                </p>
+                                <button
+                                    onClick={() => onExploreUniverse(data, data.media_type || 'movie')}
+                                    className="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-full font-semibold transition-colors duration-200"
+                                >
+                                    Explore Connections
+                                </button>
+                                {cast.length > 0 && (
+                                    <div className="mt-8">
+                                        <h2 className="text-xl md:text-2xl font-bold mb-4">Top Billed Cast</h2>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                                            {cast.map(person => (
+                                                <div
+                                                    key={person.id}
+                                                    onClick={() => onSelectPerson(person.id)}
+                                                    className="flex flex-col items-center text-center cursor-pointer transform transition-transform hover:scale-105"
+                                                >
+                                                    <img
+                                                        src={person.profile_path ? `${IMAGE_BASE_URL}${person.profile_path}` : PLACEHOLDER_IMG}
+                                                        alt={person.name}
+                                                        className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-2 border-gray-700"
+                                                        onError={(e) => { e.target.src = PLACEHOLDER_IMG; }}
+                                                    />
+                                                    <p className="text-sm font-semibold mt-2">{person.name}</p>
+                                                    <p className="text-xs text-gray-400 truncate w-full">{person.character}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const PersonDetails = ({ data, onSelectMovie, onExploreUniverse }) => {
+                const biographyWords = data.biography ? data.biography.split(' ') : [];
+                const isLongBio = biographyWords.length > 50;
+                const [showFullBio, setShowFullBio] = useState(false);
+                const displayBio = isLongBio && !showFullBio ? biographyWords.slice(0, 50).join(' ') + '...' : biographyWords.join(' ');
+
+                const knownFor = data.combined_credits?.cast || [];
+
+                return (
+                    <div className="container mx-auto p-4 md:p-8 mt-16 custom-scrollbar overflow-y-auto" style={{ maxHeight: 'calc(100vh - 6rem)' }}>
+                        <div className="md:flex md:space-x-8">
+                            <div className="md:w-1/3 flex-shrink-0 flex justify-center md:block">
+                                <img
+                                    src={data.profile_path ? `${IMAGE_BASE_URL}${data.profile_path}` : PLACEHOLDER_IMG}
+                                    alt={data.name}
+                                    className="w-48 h-48 md:w-full md:h-auto rounded-full md:rounded-lg shadow-xl object-cover"
+                                    onError={(e) => { e.target.src = PLACEHOLDER_IMG; }}
+                                />
+                            </div>
+                            <div className="md:w-2/3 mt-6 md:mt-0">
+                                <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold">{data.name}</h1>
+                                <p className="text-lg md:text-xl text-gray-400 mt-2">{data.birthday ? `Born: ${data.birthday}` : 'N/A'}</p>
+                                <p className="text-gray-300 mt-4 leading-relaxed">
+                                    {displayBio}
+                                    {isLongBio && (
+                                        <button
+                                            onClick={() => setShowFullBio(!showFullBio)}
+                                            className="text-blue-400 hover:text-blue-300 ml-1 font-semibold transition-colors"
+                                        >
+                                            {showFullBio ? 'Read Less' : 'Read More'}
+                                        </button>
+                                    )}
+                                </p>
+                                <button
+                                    onClick={() => onExploreUniverse(data, 'person')}
+                                    className="mt-4 px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-full font-semibold transition-colors duration-200"
+                                >
+                                    Explore Connections
+                                </button>
+                                {knownFor.length > 0 && (
+                                    <div className="mt-8">
+                                        <h2 className="text-xl md:text-2xl font-bold mb-4">Known For</h2>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                                            {knownFor
+                                                .filter(item => item.poster_path)
+                                                .sort((a, b) => b.vote_count - a.vote_count)
+                                                .slice(0, 10)
+                                                .map(item => (
+                                                    <MovieCard
+                                                        key={item.id}
+                                                        movie={item}
+                                                        onSelect={fetchDetails}
+                                                    />
+                                                ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const renderView = () => {
+                if (loading) {
+                    return <LoadingSpinner />;
+                }
+                if (error) {
+                    return <ErrorMessage message={error} />;
+                }
+                switch (view) {
+                    case 'trending':
+                    case 'search':
+                        return (
+                            <div className="container mx-auto p-4 md:p-8 mt-16">
+                                <h1 className="text-2xl md:text-3xl font-bold mb-6">
+                                    {data?.type === 'trending' ? 'Trending Today' : 'Search Results'}
+                                </h1>
+                                {data?.results && data.results.length > 0 ? (
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                                        {data.results.map(item => (
+                                            item.media_type === 'person' ? (
+                                                <PersonCard
+                                                    key={item.id}
+                                                    person={item}
+                                                    onSelect={fetchPersonDetails}
+                                                />
+                                            ) : (
+                                                <MovieCard
+                                                    key={item.id}
+                                                    movie={item}
+                                                    onSelect={fetchDetails}
+                                                />
+                                            )
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-center text-gray-400 mt-10">No results found. Try a different search term.</p>
+                                )}
+                            </div>
+                        );
+                    case 'details':
+                        return <MovieDetails data={data} onSelectPerson={fetchPersonDetails} onExploreUniverse={handleExploreUniverse} />;
+                    case 'personDetails':
+                        return <PersonDetails data={data} onSelectMovie={fetchDetails} onExploreUniverse={handleExploreUniverse} />;
+                    case 'universe':
+                        return <UniverseVisualization data={data} onNodeClick={(id, type) =>
+ type === 'person' ? fetchPersonDetails(id) : fetchDetails(id, type)} />;
+                    default:
+                        return null; // Should not happen with initial trending load
+                }
+            };
+
+            return (
+                <div className="relative">
+                    <SearchBar onSearch={handleSearch} showBack={history.length > 0} />
+                    {renderView()}
+                </div>
+            );
+        };
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
