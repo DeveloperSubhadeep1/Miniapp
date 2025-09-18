@@ -25,6 +25,7 @@
         }
         .custom-scrollbar::-webkit-scrollbar {
             width: 8px;
+            height: 8px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
             background: #2d3748; /* dark-blue-800 */
@@ -175,7 +176,7 @@
 
                 if (sourceType === 'movie' || sourceType === 'tv') {
                     // Add recommendations as children
-                    sourceData.recommendations?.results?.slice(0, 5).filter(r => r.poster_path).forEach(rec => {
+                    sourceData.recommendations?.results?.slice(0, 10).filter(r => r.poster_path).forEach(rec => {
                         treeData.children.push({
                             name: rec.title || rec.name,
                             type: rec.media_type,
@@ -184,7 +185,7 @@
                     });
                 } else if (sourceType === 'person') {
                     // Add known for movies/tv shows as children
-                    sourceData.combined_credits?.cast?.sort((a, b) => b.vote_count - a.vote_count).slice(0, 5).filter(k => k.poster_path).forEach(knownFor => {
+                    sourceData.combined_credits?.cast?.sort((a, b) => b.vote_count - a.vote_count).slice(0, 10).filter(k => k.poster_path).forEach(knownFor => {
                         treeData.children.push({
                             name: knownFor.title || knownFor.name,
                             type: knownFor.media_type,
@@ -212,7 +213,6 @@
                     const treeData = generateTreeData(data.data, data.type);
 
                     const margin = { top: 20, right: 120, bottom: 20, left: 120 };
-                    const containerWidth = containerRef.current.clientWidth;
                     const containerHeight = containerRef.current.clientHeight;
 
                     const root = d3.hierarchy(treeData);
@@ -220,10 +220,8 @@
                     // Dynamically calculate height based on the number of nodes
                     const nodeCount = root.leaves().length;
                     const dynamicHeight = Math.max(containerHeight, nodeCount * 40);
-                    const width = containerWidth;
-
+                    
                     const svg = d3.select(svgRef.current)
-                        .attr("width", width)
                         .attr("height", dynamicHeight);
 
                     svg.selectAll("*").remove();
@@ -232,7 +230,7 @@
                         .attr("transform", `translate(${margin.left},${dynamicHeight / 2})`);
 
                     const treeLayout = d3.tree()
-                        .nodeSize([40, 100]); // Reduced horizontal spacing
+                        .nodeSize([40, 200]);
 
                     const treeNodes = treeLayout(root);
 
@@ -254,6 +252,7 @@
                         .attr("class", "node")
                         .attr("transform", d => `translate(${d.y},${d.x})`);
 
+                    // Circle
                     node.append("circle")
                         .attr("r", d => d.depth === 0 ? 15 : d.data.type === 'person' ? 10 : 8)
                         .attr("fill", d => {
@@ -262,39 +261,39 @@
                             return "#22c55e";
                         });
 
-                    node.append("text")
-                        .attr("dy", "-.35em") // Adjusted vertical position
+                    // Text labels with dynamic background
+                    const textGroup = node.append("g");
+
+                    const text = textGroup.append("text")
+                        .attr("dy", "0.31em")
                         .attr("x", d => d.children ? -13 : 13)
                         .attr("text-anchor", d => d.children ? "end" : "start")
                         .text(d => d.data.name)
-                        .attr("class", "text-sm fill-current text-gray-300")
-                        .style("text-shadow", "1px 1px 2px #000")
-                        .call(wrapText, d => d.children ? -13 : 13); // Call the new function to wrap the text
+                        .attr("class", "text-sm fill-current text-gray-300");
+                        
+                    // Add background rect based on text bounding box
+                    text.each(function(d) {
+                        const bbox = this.getBBox();
+                        d3.select(this.parentNode).insert("rect", "text")
+                            .attr("x", bbox.x - 5)
+                            .attr("y", bbox.y - 3)
+                            .attr("width", bbox.width + 10)
+                            .attr("height", bbox.height + 6)
+                            .attr("rx", 4)
+                            .attr("ry", 4)
+                            .attr("fill", "#2d3748")
+                            .style("opacity", 0.7);
+                    });
 
-                    // Function to wrap text
-                    function wrapText(text, x) {
-                        text.each(function() {
-                            const nodeText = d3.select(this);
-                            const words = nodeText.text().split(/\s+/).reverse();
-                            let word;
-                            let line = [];
-                            let lineNumber = 0;
-                            const lineHeight = 1.2; // ems
-                            const y = nodeText.attr("y") || 0;
-                            const dy = parseFloat(nodeText.attr("dy"));
-                            let tspan = nodeText.text(null).append("tspan").attr("x", x).attr("dy", `${dy}em`);
-                            while (word = words.pop()) {
-                                line.push(word);
-                                tspan.text(line.join(" "));
-                                if (tspan.node().getComputedTextLength() > 100) { // Limit line width
-                                    line.pop();
-                                    tspan.text(line.join(" "));
-                                    line = [word];
-                                    tspan = nodeText.append("tspan").attr("x", x).attr("dy", `${lineHeight}em`).text(word);
-                                }
-                            }
-                        });
-                    }
+                    // Calculate the new SVG width based on the widest node
+                    const max_y = d3.max(root.descendants(), d => d.y);
+                    let maxTextWidth = 0;
+                    svg.selectAll("text").each(function() {
+                        const bbox = this.getBBox();
+                        maxTextWidth = Math.max(maxTextWidth, bbox.width);
+                    });
+                    const dynamicWidth = max_y + margin.left + margin.right + maxTextWidth;
+                    svg.attr("width", dynamicWidth);
 
                     node.on("click", (event, d) => {
                         if (d.depth === 0) return; // Don't reload the root
@@ -308,11 +307,11 @@
                 }, [data]);
 
                 return (
-                    <div ref={containerRef} className="container mx-auto p-4 md:p-8 mt-16 w-full custom-scrollbar overflow-y-auto" style={{ maxHeight: 'calc(100vh - 6rem)' }}>
+                    <div ref={containerRef} className="container mx-auto p-4 md:p-8 mt-16 w-full custom-scrollbar overflow-y-auto overflow-x-auto" style={{ maxHeight: 'calc(100vh - 6rem)' }}>
                         <div className="flex justify-center items-center">
                             <h2 className="text-2xl md:text-3xl font-bold mb-6">Connected Universe</h2>
                         </div>
-                        <svg ref={svgRef} className="w-full h-auto"></svg>
+                        <svg ref={svgRef} className="h-auto"></svg>
                     </div>
                 );
             };
@@ -582,8 +581,7 @@
                     case 'personDetails':
                         return <PersonDetails data={data} onSelectMovie={fetchDetails} onExploreUniverse={handleExploreUniverse} />;
                     case 'universe':
-                        return <UniverseVisualization data={data} onNodeClick={(id, type) =>
- type === 'person' ? fetchPersonDetails(id) : fetchDetails(id, type)} />;
+                        return <UniverseVisualization data={data} onNodeClick={(id, type) => type === 'person' ? fetchPersonDetails(id) : fetchDetails(id, type)} />;
                     default:
                         return null; // Should not happen with initial trending load
                 }
